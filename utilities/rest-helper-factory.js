@@ -421,12 +421,6 @@ module.exports = function(logger, mongoose, server) {
           .label(label)
       }
 
-      // EXPL: support bulk creates
-      createModel = Joi.alternatives().try(
-        Joi.array().items(createModel),
-        createModel
-      )
-
       let readModel = joiMongooseHelper.generateJoiReadModel(model, Log)
       let label = readModel._flags.label
 
