@@ -41,6 +41,12 @@ internals.populateDuplicateFields = function(model, mongoose, logger) {
               let promise = childModel
                 .findOne({ _id: doc[key] })
                 .then(function(result) {
+                  if (!result) {
+                    throw Boom.badData(
+                      `${association.model} reference is not exist`
+                    )
+                  }
+
                   const docsToUpdate = payload.filter(function(docToFind) {
                     return docToFind[key] === result._id.toString()
                   })
