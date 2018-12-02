@@ -421,6 +421,16 @@ module.exports = function(logger, mongoose, server) {
           .label(label)
       }
 
+      // Set custom payload validation from the routeOptions
+      if (
+        model.routeOptions &&
+        model.routeOptions.create &&
+        model.routeOptions.create.validation &&
+        model.routeOptions.create.validation.payload
+      ) {
+        createModel = model.routeOptions.create.validation.payload
+      }
+
       let readModel = joiMongooseHelper.generateJoiReadModel(model, Log)
       let label = readModel._flags.label
 
@@ -880,6 +890,16 @@ module.exports = function(logger, mongoose, server) {
         readModel = Joi.alternatives()
           .try(readModel, Joi.any())
           .label(label)
+      }
+
+      // Set custom payload validation from the routeOptions
+      if (
+        model.routeOptions &&
+        model.routeOptions.update &&
+        model.routeOptions.update.validation &&
+        model.routeOptions.update.validation.payload
+      ) {
+        updateModel = model.routeOptions.update.validation.payload
       }
 
       let auth = false
