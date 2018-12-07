@@ -107,7 +107,6 @@ async function _listHandler(model, request, Log) {
         Log
       ).lean()
       let result = await mongooseQuery.exec()
-      Log.log('Result: %s', JSON.stringify(result))
       return result
     }
 
@@ -171,7 +170,6 @@ async function _listHandler(model, request, Log) {
         filterDeletedEmbeds(result, {}, '', 0, Log)
       }
 
-      Log.log('Result: %s', JSON.stringify(result))
       return result
     })
 
@@ -300,8 +298,6 @@ async function _findHandler(model, _id, request, Log) {
         // EXPL: remove soft deleted documents from populated properties
         filterDeletedEmbeds(result, {}, '', 0, Log)
       }
-
-      Log.log('Result: %s', JSON.stringify(result))
 
       return result
     } else {
