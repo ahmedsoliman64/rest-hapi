@@ -63,7 +63,6 @@ module.exports = function(logger, mongoose, server) {
 
         if (model.routeOptions.allowDelete !== false) {
           this.generateDeleteOneEndpoint(server, model, options, Log)
-          this.generateDeleteManyEndpoint(server, model, options, Log)
         }
 
         if (model.routeOptions.associations) {
