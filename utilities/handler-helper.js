@@ -317,7 +317,8 @@ async function _findHandler(model, _id, request, Log) {
  * @private
  */
 function _create(model, payload, Log) {
-  let request = { payload: payload }
+  // fix passing the original request object not only the payload
+  let request = payload.payload ? payload : { payload: payload }
   return _createHandler(model, request, Log)
 }
 // TODO: make sure errors are catching in correct order
