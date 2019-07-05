@@ -558,10 +558,18 @@ internals.generateJoiModelFromFieldType = function(field, logger) {
       model = Joi.bool()
       break
     case 'Number':
-      model = Joi.number()
+      if (!fieldCopy.min) {
+        model = Joi.number()
+      } else {
+        model = Joi.number().min(fieldCopy.min)
+      }
       break
     case 'Date':
-      model = Joi.date()
+      if (!fieldCopy.min) {
+        model = Joi.date()
+      } else {
+        model = Joi.date().min(fieldCopy.min)
+      }
       break
     case 'String':
       if (fieldCopy.enum) {
