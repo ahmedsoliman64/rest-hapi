@@ -166,7 +166,7 @@ function mongooseInit(mongoose, logger, config) {
     _.omit(config.mongo, ['pass'])
   )
 
-  mongoose.connect(config.mongo.URI, { useMongoClient: true })
+  mongoose.connect(config.mongo.URI)
 
   globals.mongoose = mongoose
 
