@@ -6,6 +6,47 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.9.0] - 2019-09-22 [BREAKING]
+### Changed
+- [BREAKING] [Updated $flatten query parameter to affect nested $embeds](https://github.com/JKHeadley/rest-hapi/pull/203)
+
+## [1.8.0] - 2019-09-21
+### Changed
+- [Updated dependencies (hapi v18)](https://github.com/JKHeadley/rest-hapi/pull/201)
+
+## [1.7.0] - 2019-09-13
+### Added
+- [Named parameters for wrapper methods](https://github.com/JKHeadley/rest-hapi/pull/200)
+- [Simulated REST calls](https://github.com/JKHeadley/rest-hapi/pull/200)
+- [Exposed `server` and `models` in RestHapi object](https://github.com/JKHeadley/rest-hapi/pull/200)
+
+## [1.6.0] - 2019-05-06
+### Added
+- [Updated code for disabling authentication on specific endpoints.](https://github.com/JKHeadley/rest-hapi/pull/177)
+
+### Fixed
+- [Independent header validation for each endpoint](https://github.com/JKHeadley/rest-hapi/pull/176)
+
+## [1.5.0] - 2019-04-30
+### Added
+- [Added general swagger options](https://github.com/JKHeadley/rest-hapi/pull/172)
+
+### Changed
+- [Updated dependencies](https://github.com/JKHeadley/rest-hapi/pull/146)
+
+## [1.4.0] - 2019-03-18
+### Added
+- [feat: Add option to disable swagger](https://github.com/JKHeadley/rest-hapi/commit/b70a5360c40a6bce052cdc5937e24d9669b16e71)
+- [update: allow 'id' user defined property in schema](https://github.com/JKHeadley/rest-hapi/pull/169)
+- [Filter out fields postfixed with $\* ](https://github.com/JKHeadley/rest-hapi/pull/167)
+
+### Changed
+- [Bump minimatch to ^3.0.4 because of vulnerability](https://github.com/JKHeadley/rest-hapi/commit/8931d8d229dad80e08386ecc178c32ca8684128b)
+
+### Fixed
+- [fix undefined pointer when enabling auditLogScope](https://github.com/JKHeadley/rest-hapi/commit/d2e1340957d6620f3ab0d3b450a927e2859e0379)
+
+
 ## [1.3.0] - 2018-06-14
 ### Added
 - Added 'swaggerHost' config option.
@@ -236,7 +277,7 @@ post(hardDelete, deleted, Log) | post(hardDelete, deleted, request, Log)
 
 
 
-[Unreleased]: https://github.com/jkheadley/rest-hapi/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/jkheadley/rest-hapi/compare/v1.9.0...HEAD
 [0.20.0]: https://github.com/jkheadley/rest-hapi/compare/v0.19.2...v0.20.0
 [0.20.2]: https://github.com/jkheadley/rest-hapi/compare/v0.20.0...v0.20.2
 [0.20.3]: https://github.com/jkheadley/rest-hapi/compare/v0.20.2...v0.20.3
@@ -266,5 +307,11 @@ post(hardDelete, deleted, Log) | post(hardDelete, deleted, request, Log)
 [1.0.0]: https://github.com/jkheadley/rest-hapi/compare/v0.43.0...v1.0.1
 [1.2.0]: https://github.com/jkheadley/rest-hapi/compare/v1.0.1...v1.2.0
 [1.3.0]: https://github.com/jkheadley/rest-hapi/compare/v1.2.0...v1.3.0
+[1.4.0]: https://github.com/jkheadley/rest-hapi/compare/v1.3.0...v1.4.0
+[1.5.0]: https://github.com/jkheadley/rest-hapi/compare/v1.4.0...v1.5.0
+[1.6.0]: https://github.com/jkheadley/rest-hapi/compare/v1.5.0...v1.6.0
+[1.7.0]: https://github.com/jkheadley/rest-hapi/compare/v1.6.0...v1.7.0
+[1.8.0]: https://github.com/jkheadley/rest-hapi/compare/v1.7.0...v1.8.0
+[1.9.0]: https://github.com/jkheadley/rest-hapi/compare/v1.8.0...v1.9.0
 
 [BREAKING]: https://github.com/JKHeadley/rest-hapi/releases

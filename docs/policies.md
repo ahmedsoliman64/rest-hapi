@@ -70,7 +70,7 @@ Since policies and [middleware functions](middleware.md) seem to provide similar
 Policies | Middleware
 --- | ---
 Policies are most useful when applied to multiple routes for multiple models, which is why they are located in a centralized place | Middleware functions are meant to be both model and endpoint specific
-Policies are only active when an endpoint is called | Middleware functions are active when either an endpoint is called or when a [wrapper method](mongoose-wrapper-methods.md) is used
+Policies are only active when an endpoint is called | Middleware functions are active when either an endpoint is called or when a [wrapper method](mongoose-wrapper-methods.md) is used (**UPDATE** As of v1.7.x policies can be [accessed programmatically via wrapper methods](mongoose-wrapper-methods.md#simulated-rest-calls))
 Policies can run before (`onPreHandler`) or after (`onPostHander`) the handler function | Since middleware functions are run as part of the handler, a `pre` middleware function will run after any `onPreHandler` policy, and a `post` middlware function will run before any `onPostHandler` policy
 
 ## Example: custom authorization via policies
@@ -79,7 +79,7 @@ To provide an example of the power of policies within rest-hapi, consider the fo
 A developer wants to implement document authorization, but wants to maintain control over the implementation and have the option of providing functionality outside of what is available with rest-hapi's built in [document authorization](authorization.md#document-authorization). They want to only allow the user that creates a document to be able to modify the document. They decide to implement this via the policy below (`docAuth.js`).
 
 ```javascript
-const Boom = require('boom')
+const Boom = require('@hapi/boom')
 
 let docAuth = async function(request, h) {
     let Log = request.logger

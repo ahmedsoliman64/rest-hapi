@@ -129,7 +129,7 @@ config.embedAssociations = false
  * - deletedAt: (default: true) date specifying when the document was soft deleted.
  * - createdBy: (default: false) _id of user that created the document.
  * - updatedBy: (default: false) _id of user that last updated the document.
- * - updatedBy: (default: false) _id of user that soft deleted the document.
+ * - deletedBy: (default: false) _id of user that soft deleted the document.
  */
 config.enableCreatedAt = true
 config.enableUpdatedAt = true
@@ -434,6 +434,15 @@ config.logRoutes = false
  */
 config.loglevel = 'NOTE'
 ```
+
+## swaggerOptions
+```javascript
+/**
+ * Set swagger options as per https://github.com/glennjones/hapi-swagger/blob/master/optionsreference.md
+ * Options set here will override swagger config options below
+ * @type {Object}
+ config.swaggerOptions = {}
+ ```
 
 ## docExpansion
 ```javascript

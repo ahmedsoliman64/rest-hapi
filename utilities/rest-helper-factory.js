@@ -1,21 +1,21 @@
 'use strict'
 
-let Joi = require('joi')
+const Joi = require('@hapi/joi')
 Joi.objectId = require('joi-objectid')(Joi)
-let _ = require('lodash')
-let assert = require('assert')
-let joiMongooseHelper = require('./joi-mongoose-helper')
-let validationHelper = require('./validation-helper')
-let authHelper = require('./auth-helper')
-let chalk = require('chalk')
-let config = require('../config')
-let restHapiPolicies = require('./policy-generator')
+const _ = require('lodash')
+const assert = require('assert')
+const joiMongooseHelper = require('./joi-mongoose-helper')
+const validationHelper = require('./validation-helper')
+const authHelper = require('./auth-helper')
+const chalk = require('chalk')
+const config = require('../config')
+const restHapiPolicies = require('./policy-generator')
 
 // TODO: remove "options"?
 // TODO: change model "alias" to "routeAlias" (or remove the option)
 
 module.exports = function(logger, mongoose, server) {
-  let HandlerHelper = require('./handler-helper-factory')()
+  const HandlerHelper = require('./handler-helper-factory')()
 
   let headersValidation
 
@@ -42,9 +42,9 @@ module.exports = function(logger, mongoose, server) {
       try {
         validationHelper.validateModel(model, logger)
 
-        let collectionName = model.collectionDisplayName || model.modelName
+        const collectionName = model.collectionDisplayName || model.modelName
 
-        let Log = logger.bind(chalk.blue(collectionName))
+        const Log = logger.bind(chalk.blue(collectionName))
 
         options = options || {}
 
@@ -66,8 +66,8 @@ module.exports = function(logger, mongoose, server) {
         }
 
         if (model.routeOptions.associations) {
-          for (let associationName in model.routeOptions.associations) {
-            let association = model.routeOptions.associations[associationName]
+          for (const associationName in model.routeOptions.associations) {
+            const association = model.routeOptions.associations[associationName]
 
             if (
               association.type === 'MANY_MANY' ||
@@ -121,8 +121,8 @@ module.exports = function(logger, mongoose, server) {
         }
 
         if (model.routeOptions && model.routeOptions.extraEndpoints) {
-          for (let extraEndpointIndex in model.routeOptions.extraEndpoints) {
-            let extraEndpointFunction =
+          for (const extraEndpointIndex in model.routeOptions.extraEndpoints) {
+            const extraEndpointFunction =
               model.routeOptions.extraEndpoints[extraEndpointIndex]
 
             extraEndpointFunction(server, model, options, Log)
@@ -146,7 +146,7 @@ module.exports = function(logger, mongoose, server) {
       validationHelper.validateModel(model, logger)
       const Log = logger.bind(chalk.yellow('List'))
 
-      let collectionName = model.collectionDisplayName || model.modelName
+      const collectionName = model.collectionDisplayName || model.modelName
       options = options || {}
 
       if (config.logRoutes) {
@@ -161,27 +161,28 @@ module.exports = function(logger, mongoose, server) {
         resourceAliasForRoute = model.modelName
       }
 
-      let handler = HandlerHelper.generateListHandler(model, options, Log)
+      const handler = HandlerHelper.generateListHandler(model, options, Log)
 
-      let queryModel = joiMongooseHelper.generateJoiListQueryModel(model, Log)
+      const queryModel = joiMongooseHelper.generateJoiListQueryModel(model, Log)
 
       let readModel = joiMongooseHelper.generateJoiReadModel(model, Log)
 
       if (!config.enableResponseValidation) {
-        let label = readModel._flags.label
+        const label = readModel._flags.label
         readModel = Joi.alternatives()
           .try(readModel, Joi.any())
           .label(label)
       }
 
       let auth = false
+      let listHeadersValidation = Object.assign(headersValidation, {})
 
       if (config.authStrategy && model.routeOptions.readAuth !== false) {
         auth = {
           strategy: config.authStrategy
         }
 
-        let scope = authHelper.generateScopeForEndpoint(model, 'read', Log)
+        const scope = authHelper.generateScopeForEndpoint(model, 'read', Log)
 
         if (!_.isEmpty(scope)) {
           auth.scope = scope
@@ -190,7 +191,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        listHeadersValidation = null
       }
 
       let policies = []
@@ -218,7 +219,7 @@ module.exports = function(logger, mongoose, server) {
           cors: config.cors,
           validate: {
             query: queryModel,
-            headers: headersValidation
+            headers: listHeadersValidation
           },
           plugins: {
             model: model,
@@ -235,7 +236,10 @@ module.exports = function(logger, mongoose, server) {
                     'The authentication header was missing/malformed, or the token has expired.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -271,7 +275,7 @@ module.exports = function(logger, mongoose, server) {
       validationHelper.validateModel(model, logger)
       const Log = logger.bind(chalk.yellow('Find'))
 
-      let collectionName = model.collectionDisplayName || model.modelName
+      const collectionName = model.collectionDisplayName || model.modelName
       if (config.logRoutes) {
         Log.note('Generating Find endpoint for ' + collectionName)
       }
@@ -284,28 +288,29 @@ module.exports = function(logger, mongoose, server) {
         resourceAliasForRoute = model.modelName
       }
 
-      let handler = HandlerHelper.generateFindHandler(model, options, Log)
+      const handler = HandlerHelper.generateFindHandler(model, options, Log)
 
-      let queryModel = joiMongooseHelper.generateJoiFindQueryModel(model, Log)
+      const queryModel = joiMongooseHelper.generateJoiFindQueryModel(model, Log)
 
       let readModel =
         model.readModel || joiMongooseHelper.generateJoiReadModel(model, Log)
 
       if (!config.enableResponseValidation) {
-        let label = readModel._flags.label
+        const label = readModel._flags.label
         readModel = Joi.alternatives()
           .try(readModel, Joi.any())
           .label(label)
       }
 
       let auth = false
+      let findHeadersValidation = Object.assign(headersValidation, {})
 
       if (config.authStrategy && model.routeOptions.readAuth !== false) {
         auth = {
           strategy: config.authStrategy
         }
 
-        let scope = authHelper.generateScopeForEndpoint(model, 'read', Log)
+        const scope = authHelper.generateScopeForEndpoint(model, 'read', Log)
 
         if (!_.isEmpty(scope)) {
           auth.scope = scope
@@ -317,7 +322,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        findHeadersValidation = null
       }
 
       let policies = []
@@ -348,7 +353,7 @@ module.exports = function(logger, mongoose, server) {
             params: {
               _id: Joi.objectId().required()
             },
-            headers: headersValidation
+            headers: findHeadersValidation
           },
           plugins: {
             model: model,
@@ -369,7 +374,10 @@ module.exports = function(logger, mongoose, server) {
                   message: 'There was no resource found with that ID.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -394,7 +402,7 @@ module.exports = function(logger, mongoose, server) {
       validationHelper.validateModel(model, logger)
       const Log = logger.bind(chalk.yellow('Create'))
 
-      let collectionName = model.collectionDisplayName || model.modelName
+      const collectionName = model.collectionDisplayName || model.modelName
       if (config.logRoutes) {
         Log.note('Generating Create endpoint for ' + collectionName)
       }
@@ -409,12 +417,12 @@ module.exports = function(logger, mongoose, server) {
         resourceAliasForRoute = model.modelName
       }
 
-      let handler = HandlerHelper.generateCreateHandler(model, options, Log)
+      const handler = HandlerHelper.generateCreateHandler(model, options, Log)
 
       let createModel = joiMongooseHelper.generateJoiCreateModel(model, Log)
 
       if (!config.enablePayloadValidation) {
-        let label = createModel._flags.label
+        const label = createModel._flags.label
         createModel = Joi.alternatives()
           .try(createModel, Joi.any())
           .label(label)
@@ -431,7 +439,7 @@ module.exports = function(logger, mongoose, server) {
       }
 
       let readModel = joiMongooseHelper.generateJoiReadModel(model, Log)
-      let label = readModel._flags.label
+      const label = readModel._flags.label
 
       readModel = Joi.alternatives()
         .try(Joi.array().items(readModel), readModel)
@@ -444,13 +452,14 @@ module.exports = function(logger, mongoose, server) {
       }
 
       let auth = false
+      let createHeadersValidation = Object.assign(headersValidation, {})
 
       if (config.authStrategy && model.routeOptions.createAuth !== false) {
         auth = {
           strategy: config.authStrategy
         }
 
-        let scope = authHelper.generateScopeForEndpoint(model, 'create', Log)
+        const scope = authHelper.generateScopeForEndpoint(model, 'create', Log)
 
         if (!_.isEmpty(scope)) {
           auth.scope = scope
@@ -459,7 +468,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        createHeadersValidation = null
       }
 
       let policies = []
@@ -472,23 +481,23 @@ module.exports = function(logger, mongoose, server) {
       }
 
       if (config.enableDocumentScopes && auth) {
-        let authorizeDocumentCreator =
+        const authorizeDocumentCreator =
           model.routeOptions.authorizeDocumentCreator === undefined
             ? config.authorizeDocumentCreator
             : model.routeOptions.authorizeDocumentCreator
-        let authorizeDocumentCreatorToRead =
+        const authorizeDocumentCreatorToRead =
           model.routeOptions.authorizeDocumentCreatorToRead === undefined
             ? config.authorizeDocumentCreatorToRead
             : model.routeOptions.authorizeDocumentCreatorToRead
-        let authorizeDocumentCreatorToUpdate =
+        const authorizeDocumentCreatorToUpdate =
           model.routeOptions.authorizeDocumentCreatorToUpdate === undefined
             ? config.authorizeDocumentCreatorToUpdate
             : model.routeOptions.authorizeDocumentCreatorToUpdate
-        let authorizeDocumentCreatorToDelete =
+        const authorizeDocumentCreatorToDelete =
           model.routeOptions.authorizeDocumentCreatorToDelete === undefined
             ? config.authorizeDocumentCreatorToDelete
             : model.routeOptions.authorizeDocumentCreatorToDelete
-        let authorizeDocumentCreatorToAssociate =
+        const authorizeDocumentCreatorToAssociate =
           model.routeOptions.authorizeDocumentCreatorToAssociate === undefined
             ? config.authorizeDocumentCreatorToAssociate
             : model.routeOptions.authorizeDocumentCreatorToAssociate
@@ -547,7 +556,7 @@ module.exports = function(logger, mongoose, server) {
           tags: ['api', collectionName],
           validate: {
             payload: createModel,
-            headers: headersValidation
+            headers: createHeadersValidation
           },
           plugins: {
             model: model,
@@ -564,7 +573,10 @@ module.exports = function(logger, mongoose, server) {
                     'The authentication header was missing/malformed, or the token has expired.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -589,7 +601,7 @@ module.exports = function(logger, mongoose, server) {
       validationHelper.validateModel(model, logger)
       const Log = logger.bind(chalk.yellow('DeleteOne'))
 
-      let collectionName = model.collectionDisplayName || model.modelName
+      const collectionName = model.collectionDisplayName || model.modelName
       if (config.logRoutes) {
         Log.note('Generating Delete One endpoint for ' + collectionName)
       }
@@ -604,7 +616,7 @@ module.exports = function(logger, mongoose, server) {
         resourceAliasForRoute = model.modelName
       }
 
-      let handler = HandlerHelper.generateDeleteHandler(model, options, Log)
+      const handler = HandlerHelper.generateDeleteHandler(model, options, Log)
 
       let payloadModel = null
       if (config.enableSoftDelete) {
@@ -616,13 +628,14 @@ module.exports = function(logger, mongoose, server) {
       }
 
       let auth = false
+      let deleteOneHeadersValidation = Object.assign(headersValidation, {})
 
       if (config.authStrategy && model.routeOptions.deleteAuth !== false) {
         auth = {
           strategy: config.authStrategy
         }
 
-        let scope = authHelper.generateScopeForEndpoint(model, 'delete', Log)
+        const scope = authHelper.generateScopeForEndpoint(model, 'delete', Log)
 
         if (!_.isEmpty(scope)) {
           auth.scope = scope
@@ -634,7 +647,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        deleteOneHeadersValidation = null
       }
 
       let policies = []
@@ -673,7 +686,7 @@ module.exports = function(logger, mongoose, server) {
               _id: Joi.objectId().required()
             },
             payload: payloadModel,
-            headers: headersValidation
+            headers: deleteOneHeadersValidation
           },
           plugins: {
             model: model,
@@ -694,7 +707,10 @@ module.exports = function(logger, mongoose, server) {
                   message: 'There was no resource found with that ID.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -721,7 +737,7 @@ module.exports = function(logger, mongoose, server) {
       validationHelper.validateModel(model, logger)
       const Log = logger.bind(chalk.yellow('DeleteMany'))
 
-      let collectionName = model.collectionDisplayName || model.modelName
+      const collectionName = model.collectionDisplayName || model.modelName
       if (config.logRoutes) {
         Log.note('Generating Delete Many endpoint for ' + collectionName)
       }
@@ -736,7 +752,7 @@ module.exports = function(logger, mongoose, server) {
         resourceAliasForRoute = model.modelName
       }
 
-      let handler = HandlerHelper.generateDeleteHandler(model, options, Log)
+      const handler = HandlerHelper.generateDeleteHandler(model, options, Log)
 
       let payloadModel = null
       if (config.enableSoftDelete) {
@@ -758,13 +774,14 @@ module.exports = function(logger, mongoose, server) {
       }
 
       let auth = false
+      let deleteManyHeadersValidation = Object.assign(headersValidation, {})
 
       if (config.authStrategy && model.routeOptions.deleteAuth !== false) {
         auth = {
           strategy: config.authStrategy
         }
 
-        let scope = authHelper.generateScopeForEndpoint(model, 'delete', Log)
+        const scope = authHelper.generateScopeForEndpoint(model, 'delete', Log)
 
         if (!_.isEmpty(scope)) {
           auth.scope = scope
@@ -773,7 +790,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        deleteManyHeadersValidation = null
       }
 
       let policies = []
@@ -809,7 +826,7 @@ module.exports = function(logger, mongoose, server) {
           tags: ['api', collectionName],
           validate: {
             payload: payloadModel,
-            headers: headersValidation
+            headers: deleteManyHeadersValidation
           },
           plugins: {
             model: model,
@@ -830,7 +847,10 @@ module.exports = function(logger, mongoose, server) {
                   message: 'There was no resource found with that ID.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -856,7 +876,7 @@ module.exports = function(logger, mongoose, server) {
       validationHelper.validateModel(model, logger)
       const Log = logger.bind(chalk.yellow('Update'))
 
-      let collectionName = model.collectionDisplayName || model.modelName
+      const collectionName = model.collectionDisplayName || model.modelName
       if (config.logRoutes) {
         Log.note('Generating Update endpoint for ' + collectionName)
       }
@@ -871,12 +891,12 @@ module.exports = function(logger, mongoose, server) {
         resourceAliasForRoute = model.modelName
       }
 
-      let handler = HandlerHelper.generateUpdateHandler(model, options, Log)
+      const handler = HandlerHelper.generateUpdateHandler(model, options, Log)
 
       let updateModel = joiMongooseHelper.generateJoiUpdateModel(model, Log)
 
       if (!config.enablePayloadValidation) {
-        let label = updateModel._flags.label
+        const label = updateModel._flags.label
         updateModel = Joi.alternatives()
           .try(updateModel, Joi.any())
           .label(label)
@@ -885,7 +905,7 @@ module.exports = function(logger, mongoose, server) {
       let readModel = joiMongooseHelper.generateJoiReadModel(model, Log)
 
       if (!config.enableResponseValidation) {
-        let label = readModel._flags.label
+        const label = readModel._flags.label
         readModel = Joi.alternatives()
           .try(readModel, Joi.any())
           .label(label)
@@ -902,13 +922,14 @@ module.exports = function(logger, mongoose, server) {
       }
 
       let auth = false
+      let updateHeadersValidation = Object.assign(headersValidation, {})
 
       if (config.authStrategy && model.routeOptions.updateAuth !== false) {
         auth = {
           strategy: config.authStrategy
         }
 
-        let scope = authHelper.generateScopeForEndpoint(model, 'update', Log)
+        const scope = authHelper.generateScopeForEndpoint(model, 'update', Log)
 
         if (!_.isEmpty(scope)) {
           auth.scope = scope
@@ -920,7 +941,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        updateHeadersValidation = null
       }
 
       let policies = []
@@ -970,7 +991,7 @@ module.exports = function(logger, mongoose, server) {
               _id: Joi.objectId().required()
             },
             payload: updateModel,
-            headers: headersValidation
+            headers: updateHeadersValidation
           },
           plugins: {
             model: model,
@@ -991,7 +1012,10 @@ module.exports = function(logger, mongoose, server) {
                   message: 'There was no resource found with that ID.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -1029,13 +1053,13 @@ module.exports = function(logger, mongoose, server) {
       )
       assert(association, 'association input must exist')
 
-      let associationName =
+      const associationName =
         association.include.as || association.include.model.modelName
-      let ownerModelName =
+      const ownerModelName =
         ownerModel.collectionDisplayName || ownerModel.modelName
-      let childModel = association.include.model
+      const childModel = association.include.model
 
-      let childModelName =
+      const childModelName =
         childModel.collectionDisplayName || childModel.modelName
 
       if (config.logRoutes) {
@@ -1049,10 +1073,11 @@ module.exports = function(logger, mongoose, server) {
 
       options = options || {}
 
-      let ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
-      let childAlias = association.alias || association.include.model.modelName
+      const ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
+      const childAlias =
+        association.alias || association.include.model.modelName
 
-      let handler = HandlerHelper.generateAssociationAddOneHandler(
+      const handler = HandlerHelper.generateAssociationAddOneHandler(
         ownerModel,
         association,
         options,
@@ -1074,7 +1099,7 @@ module.exports = function(logger, mongoose, server) {
         )
 
         if (!config.enablePayloadValidation) {
-          let label = payloadValidation._flags.label
+          const label = payloadValidation._flags.label
           payloadValidation = Joi.alternatives()
             .try(payloadValidation, Joi.any())
             .label(label)
@@ -1082,10 +1107,18 @@ module.exports = function(logger, mongoose, server) {
       }
 
       let auth = false
+      let addOneHeadersValidation = Object.assign(headersValidation, {})
+
+      if (ownerModel.routeOptions.associateAuth === false) {
+        Log.warn(
+          '"associateAuth" property is deprecated, please use "addAuth" instead.'
+        )
+      }
 
       if (
         config.authStrategy &&
-        ownerModel.routeOptions.associateAuth !== false
+        ownerModel.routeOptions.associateAuth !== false &&
+        association.addAuth !== false
       ) {
         auth = {
           strategy: config.authStrategy
@@ -1096,7 +1129,7 @@ module.exports = function(logger, mongoose, server) {
           'associate',
           Log
         )
-        let addScope =
+        const addScope =
           'add' +
           ownerModelName[0].toUpperCase() +
           ownerModelName.slice(1) +
@@ -1122,7 +1155,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        addOneHeadersValidation = null
       }
 
       let policies = []
@@ -1174,7 +1207,7 @@ module.exports = function(logger, mongoose, server) {
               childId: Joi.objectId().required()
             },
             payload: payloadValidation,
-            headers: headersValidation
+            headers: addOneHeadersValidation
           },
           plugins: {
             ownerModel: ownerModel,
@@ -1196,7 +1229,10 @@ module.exports = function(logger, mongoose, server) {
                   message: 'There was no resource found with that ID.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -1233,13 +1269,13 @@ module.exports = function(logger, mongoose, server) {
       )
       assert(association, 'association input must exist')
 
-      let associationName =
+      const associationName =
         association.include.as || association.include.model.modelName
-      let ownerModelName =
+      const ownerModelName =
         ownerModel.collectionDisplayName || ownerModel.modelName
-      let childModel = association.include.model
+      const childModel = association.include.model
 
-      let childModelName =
+      const childModelName =
         childModel.collectionDisplayName || childModel.modelName
 
       if (config.logRoutes) {
@@ -1253,10 +1289,11 @@ module.exports = function(logger, mongoose, server) {
 
       options = options || {}
 
-      let ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
-      let childAlias = association.alias || association.include.model.modelName
+      const ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
+      const childAlias =
+        association.alias || association.include.model.modelName
 
-      let handler = HandlerHelper.generateAssociationRemoveOneHandler(
+      const handler = HandlerHelper.generateAssociationRemoveOneHandler(
         ownerModel,
         association,
         options,
@@ -1264,10 +1301,18 @@ module.exports = function(logger, mongoose, server) {
       )
 
       let auth = false
+      let removeOneHeadersValidation = Object.assign(headersValidation, {})
+
+      if (ownerModel.routeOptions.associateAuth === false) {
+        Log.warn(
+          '"associateAuth" property is deprecated, please use "removeAuth" instead.'
+        )
+      }
 
       if (
         config.authStrategy &&
-        ownerModel.routeOptions.associateAuth !== false
+        ownerModel.routeOptions.associateAuth !== false &&
+        association.removeAuth !== false
       ) {
         auth = {
           strategy: config.authStrategy
@@ -1278,7 +1323,7 @@ module.exports = function(logger, mongoose, server) {
           'associate',
           Log
         )
-        let removeScope =
+        const removeScope =
           'remove' +
           ownerModelName[0].toUpperCase() +
           ownerModelName.slice(1) +
@@ -1304,7 +1349,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        removeOneHeadersValidation = null
       }
 
       let policies = []
@@ -1355,7 +1400,7 @@ module.exports = function(logger, mongoose, server) {
               ownerId: Joi.objectId().required(),
               childId: Joi.objectId().required()
             },
-            headers: headersValidation
+            headers: removeOneHeadersValidation
           },
           plugins: {
             ownerModel: ownerModel,
@@ -1377,7 +1422,10 @@ module.exports = function(logger, mongoose, server) {
                   message: 'There was no resource found with that ID.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -1414,13 +1462,13 @@ module.exports = function(logger, mongoose, server) {
       )
       assert(association, 'association input must exist')
 
-      let associationName =
+      const associationName =
         association.include.as || association.include.model.modelName
-      let ownerModelName =
+      const ownerModelName =
         ownerModel.collectionDisplayName || ownerModel.modelName
-      let childModel = association.include.model
+      const childModel = association.include.model
 
-      let childModelName =
+      const childModelName =
         childModel.collectionDisplayName || childModel.modelName
 
       if (config.logRoutes) {
@@ -1434,10 +1482,11 @@ module.exports = function(logger, mongoose, server) {
 
       options = options || {}
 
-      let ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
-      let childAlias = association.alias || association.include.model.modelName
+      const ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
+      const childAlias =
+        association.alias || association.include.model.modelName
 
-      let handler = HandlerHelper.generateAssociationAddManyHandler(
+      const handler = HandlerHelper.generateAssociationAddManyHandler(
         ownerModel,
         association,
         options,
@@ -1483,10 +1532,18 @@ module.exports = function(logger, mongoose, server) {
       }
 
       let auth = false
+      let addManyHeadersValidation = Object.assign(headersValidation, {})
+
+      if (ownerModel.routeOptions.associateAuth === false) {
+        Log.warn(
+          '"associateAuth" property is deprecated, please use "addAuth" instead.'
+        )
+      }
 
       if (
         config.authStrategy &&
-        ownerModel.routeOptions.associateAuth !== false
+        ownerModel.routeOptions.associateAuth !== false &&
+        association.addAuth !== false
       ) {
         auth = {
           strategy: config.authStrategy
@@ -1497,7 +1554,7 @@ module.exports = function(logger, mongoose, server) {
           'associate',
           Log
         )
-        let addScope =
+        const addScope =
           'add' +
           ownerModelName[0].toUpperCase() +
           ownerModelName.slice(1) +
@@ -1518,7 +1575,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        addManyHeadersValidation = null
       }
 
       let policies = []
@@ -1569,7 +1626,7 @@ module.exports = function(logger, mongoose, server) {
               ownerId: Joi.objectId().required()
             },
             payload: payloadValidation,
-            headers: headersValidation
+            headers: addManyHeadersValidation
           },
           plugins: {
             ownerModel: ownerModel,
@@ -1588,7 +1645,10 @@ module.exports = function(logger, mongoose, server) {
                   message: 'There was no resource found with that ID.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -1625,13 +1685,13 @@ module.exports = function(logger, mongoose, server) {
       )
       assert(association, 'association input must exist')
 
-      let associationName =
+      const associationName =
         association.include.as || association.include.model.modelName
-      let ownerModelName =
+      const ownerModelName =
         ownerModel.collectionDisplayName || ownerModel.modelName
-      let childModel = association.include.model
+      const childModel = association.include.model
 
-      let childModelName =
+      const childModelName =
         childModel.collectionDisplayName || childModel.modelName
 
       if (config.logRoutes) {
@@ -1645,10 +1705,11 @@ module.exports = function(logger, mongoose, server) {
 
       options = options || {}
 
-      let ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
-      let childAlias = association.alias || association.include.model.modelName
+      const ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
+      const childAlias =
+        association.alias || association.include.model.modelName
 
-      let handler = HandlerHelper.generateAssociationRemoveManyHandler(
+      const handler = HandlerHelper.generateAssociationRemoveManyHandler(
         ownerModel,
         association,
         options,
@@ -1667,10 +1728,18 @@ module.exports = function(logger, mongoose, server) {
       )
 
       let auth = false
+      let removeManyHeadersValidation = Object.assign(headersValidation, {})
+
+      if (ownerModel.routeOptions.associateAuth === false) {
+        Log.warn(
+          '"associateAuth" property is deprecated, please use "removeAuth" instead.'
+        )
+      }
 
       if (
         config.authStrategy &&
-        ownerModel.routeOptions.associateAuth !== false
+        ownerModel.routeOptions.associateAuth !== false &&
+        association.removeAuth !== false
       ) {
         auth = {
           strategy: config.authStrategy
@@ -1681,7 +1750,7 @@ module.exports = function(logger, mongoose, server) {
           'associate',
           Log
         )
-        let removeScope =
+        const removeScope =
           'remove' +
           ownerModelName[0].toUpperCase() +
           ownerModelName.slice(1) +
@@ -1706,7 +1775,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        removeManyHeadersValidation = null
       }
 
       let policies = []
@@ -1757,7 +1826,7 @@ module.exports = function(logger, mongoose, server) {
               ownerId: Joi.objectId().required()
             },
             payload: payloadValidation,
-            headers: headersValidation
+            headers: removeManyHeadersValidation
           },
           plugins: {
             ownerModel: ownerModel,
@@ -1776,7 +1845,10 @@ module.exports = function(logger, mongoose, server) {
                   message: 'There was no resource found with that ID.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies
@@ -1813,9 +1885,9 @@ module.exports = function(logger, mongoose, server) {
       )
       assert(association, 'association input must exist')
 
-      let associationName =
+      const associationName =
         association.include.as || association.include.model.modelName
-      let ownerModelName =
+      const ownerModelName =
         ownerModel.collectionDisplayName || ownerModel.modelName
 
       if (config.logRoutes) {
@@ -1829,19 +1901,20 @@ module.exports = function(logger, mongoose, server) {
 
       options = options || {}
 
-      let ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
-      let childAlias = association.alias || association.include.model.modelName
+      const ownerAlias = ownerModel.routeOptions.alias || ownerModel.modelName
+      const childAlias =
+        association.alias || association.include.model.modelName
 
-      let childModel = association.include.model
+      const childModel = association.include.model
 
-      let handler = HandlerHelper.generateAssociationGetAllHandler(
+      const handler = HandlerHelper.generateAssociationGetAllHandler(
         ownerModel,
         association,
         options,
         Log
       )
 
-      let queryModel = joiMongooseHelper.generateJoiListQueryModel(
+      const queryModel = joiMongooseHelper.generateJoiListQueryModel(
         childModel,
         Log
       )
@@ -1849,7 +1922,7 @@ module.exports = function(logger, mongoose, server) {
       let readModel = joiMongooseHelper.generateJoiReadModel(childModel, Log)
 
       if (association.linkingModel) {
-        let associationModel = {}
+        const associationModel = {}
         associationModel[
           association.linkingModel
         ] = joiMongooseHelper.generateJoiReadModel(
@@ -1864,21 +1937,32 @@ module.exports = function(logger, mongoose, server) {
       )
 
       if (!config.enableResponseValidation) {
-        let label = readModel._flags.label
+        const label = readModel._flags.label
         readModel = Joi.alternatives()
           .try(readModel, Joi.any())
           .label(label)
       }
 
       let auth = false
+      let getAllHeadersValidation = Object.assign(headersValidation, {})
 
-      if (config.authStrategy && ownerModel.routeOptions.readAuth !== false) {
+      if (ownerModel.routeOptions.associateAuth === false) {
+        Log.warn(
+          '"routeOptions.readAuth" property is deprecated for associations, please use "association.readAuth" instead.'
+        )
+      }
+
+      if (
+        config.authStrategy &&
+        ownerModel.routeOptions.readAuth !== false &&
+        association.readAuth !== false
+      ) {
         auth = {
           strategy: config.authStrategy
         }
 
         let scope = authHelper.generateScopeForEndpoint(ownerModel, 'read', Log)
-        let getScope =
+        const getScope =
           'get' +
           ownerModelName[0].toUpperCase() +
           ownerModelName.slice(1) +
@@ -1899,7 +1983,7 @@ module.exports = function(logger, mongoose, server) {
           }
         }
       } else {
-        headersValidation = null
+        getAllHeadersValidation = null
       }
 
       let policies = []
@@ -1933,7 +2017,7 @@ module.exports = function(logger, mongoose, server) {
             params: {
               ownerId: Joi.objectId().required()
             },
-            headers: headersValidation
+            headers: getAllHeadersValidation
           },
           plugins: {
             ownerModel: ownerModel,
@@ -1952,7 +2036,10 @@ module.exports = function(logger, mongoose, server) {
                   message: 'There was no resource found with that ID.'
                 },
                 { code: 500, message: 'There was an unknown error.' },
-                { code: 503, message: 'There was a problem with the database.' }
+                {
+                  code: 503,
+                  message: 'There was a problem with the database.'
+                }
               ]
             },
             policies: policies

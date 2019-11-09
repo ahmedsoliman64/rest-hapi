@@ -3,8 +3,8 @@
 const extend = require('extend')
 const _ = require('lodash')
 const path = require('path')
-const Inert = require('inert')
-const Vision = require('vision')
+const Inert = require('@hapi/inert')
+const Vision = require('@hapi/vision')
 const HapiSwagger = require('hapi-swagger')
 const Mrhorse = require('mrhorse')
 const logging = require('loggin')
@@ -47,17 +47,21 @@ module.exports = {
   getLogger: getLogger,
   logUtil: logUtil,
   joiHelper: joiHelper,
-  testHelper: testHelper
+  testHelper: testHelper,
+  server: {},
+  models: {}
 }
 
 async function register(server, options) {
-  let config = defaultConfig
+  module.exports.server = server
+
+  const config = defaultConfig
 
   // Overwrite the default config with config set by the user
   extend(true, config, options.config)
   module.exports.config = config
 
-  let Log = getLogger('api')
+  const Log = getLogger('api')
 
   module.exports.logger = Log
 
@@ -92,13 +96,15 @@ async function register(server, options) {
     }
   }
 
+  module.exports.models = models
+
   if (!config.disableSwagger) {
     await registerHapiSwagger(server, Log, config)
   }
 
-  registerMrHorse(server, Log, config)
+  await registerMrHorse(server, Log, config)
 
-  return generateRoutes(server, mongoose, models, Log, config)
+  await generateRoutes(server, mongoose, models, Log, config)
 }
 
 /**
@@ -110,16 +116,17 @@ async function register(server, options) {
 function generateModels(mongoose) {
   internals.modelsGenerated = true
 
-  let config = defaultConfig
+  const config = defaultConfig
 
   extend(true, config, module.exports.config)
 
-  let Log = getLogger('models')
+  const Log = getLogger('models')
 
   module.exports.logger = Log
 
   return modelGenerator(mongoose, Log, config).then(function(models) {
     internals.globalModels = models
+    module.exports.models = models
     return models
   })
 }
@@ -130,11 +137,11 @@ function generateModels(mongoose) {
  * @returns {*}
  */
 function getLogger(label) {
-  let config = defaultConfig
+  const config = defaultConfig
 
   extend(true, config, module.exports.config)
 
-  let rootLogger = logging.getLogger(chalk.gray(label))
+  const rootLogger = logging.getLogger(chalk.gray(label))
 
   rootLogger.logLevel = config.loglevel
 
@@ -159,7 +166,7 @@ function mongooseInit(mongoose, logger, config) {
     _.omit(config.mongo, ['pass'])
   )
 
-  mongoose.connect(config.mongo.URI)
+  mongoose.connect(config.mongo.URI, { useMongoClient: true })
 
   globals.mongoose = mongoose
 
@@ -222,17 +229,26 @@ async function registerHapiSwagger(server, logger, config) {
 
   let swaggerOptions = {
     documentationPath: '/',
-    info: {
-      title: config.appTitle,
-      version: config.version
-    },
     host: config.swaggerHost,
     expanded: config.docExpansion,
     swaggerUI: config.enableSwaggerUI,
     documentationPage: config.enableSwaggerUI,
-    schemes: config.enableSwaggerHttps ? ['https'] : ['http'],
-    reuseDefinitions: false
+    schemes: config.enableSwaggerHttps ? ['https'] : ['http']
   }
+
+  // if swagger config is defined, use that
+  if (config.swaggerOptions) {
+    swaggerOptions = { ...swaggerOptions, ...config.swaggerOptions }
+  }
+
+  // override some options for safety
+  if (!swaggerOptions.info) {
+    swaggerOptions.info = {}
+  }
+
+  swaggerOptions.info.title = config.appTitle
+  swaggerOptions.info.version = config.version
+  swaggerOptions.reuseDefinitions = false
 
   await server.register([
     Inert,
@@ -248,9 +264,9 @@ function generateRoutes(server, mongoose, models, logger, config) {
 
   const restHelper = restHelperFactory(logger, mongoose, server)
 
-  for (let modelKey in models) {
+  for (const modelKey in models) {
     // Generate endpoints for all of the models
-    let model = models[modelKey]
+    const model = models[modelKey]
     restHelper.generateRoutes(server, model, { models: models })
   }
 
